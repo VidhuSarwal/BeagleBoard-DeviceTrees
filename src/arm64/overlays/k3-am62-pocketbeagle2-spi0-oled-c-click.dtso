@@ -1,80 +1,78 @@
 // SPDX-License-Identifier: GPL-2.0-only OR MIT
 /*
- * Ported DT Overlay for OLED-C Click for PocketBeagle v2 (AM6232)
- * Based on legacy AM335x overlay from Jason Kridner & Octavo Systems
+ * DT Overlay for OLED C Click on PocketBeagle v2 (AM62x)
+ * Ported from AM335x overlay
  *
  * https://www.mikroe.com/oled-c-click
- * https://download.mikroe.com/documents/add-on-boards/click/oled-c/oled-c-click-schematic-v101.pdf
- *
- * Ported to AM62x by BeagleBoard.org, 2025
  */
 
-/dts-v1/;
+ /dts-v1/;
 /plugin/;
 
 #include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
 #include "ti/k3-pinctrl.h"
 
 / {
-	compatible = "ti,am625";
-
 	chosen {
 		overlays {
-			k3-am62-pocketbeagle2-spi0-oled-c-click.kernel = __TIMESTAMP__;
+			k3-am62-pocketbeagle2-spi2-oled-c-click.kernel = __TIMESTAMP__;
 		};
 	};
 };
 
-/* 🧰 Pinmux configuration for OLED-C Click */
 &main_pmx0 {
-	pb2_oledc_spi0_pins: pb2-oledc-spi0-pins {
+	oledc_spi2_pins: oledc-spi2-default-pins {
 		pinctrl-single,pins = <
-			AM62X_IOPAD(0x01C0, PIN_OUTPUT, 7) /* P2_33 (B13): gpio1_18 - RST */
-			AM62X_IOPAD(0x01E8, PIN_OUTPUT, 7) /* P1_36 (B17): gpio1_28 - DC */
-			AM62X_IOPAD(0x0180, PIN_OUTPUT, 7) /* P1_34 (AD23): gpio1_2 - EN */
+			AM62X_IOPAD(0x01ac, PIN_OUTPUT, 1)  /* P1_06 E19: SPI2_CS0 */
+			AM62X_IOPAD(0x01b0, PIN_OUTPUT, 1)  /* P1_08 A20: SPI2_CLK */
+			AM62X_IOPAD(0x0194, PIN_INPUT, 1)   /* P1_10 B19: SPI2_D0 (MISO) */
+			AM62X_IOPAD(0x0198, PIN_OUTPUT, 1)  /* P1_12 A19: SPI2_D1 (MOSI) */
+		>;
+	};
 
-			AM62X_IOPAD(0x01C4, PIN_OUTPUT, 0) /* P2_25 (B14): SPI0_CS0 */
-			AM62X_IOPAD(0x00F8, PIN_OUTPUT, 0) /* P2_28 (AB24): SPI0_CLK */
-			AM62X_IOPAD(0x00A4, PIN_OUTPUT, 0) /* P2_27 (M22): SPI0_D0 (MOSI) */
+	oledc_gpio_pins: oledc-gpio-default-pins {
+		pinctrl-single,pins = <
+			AM62X_IOPAD(0x016c, PIN_OUTPUT, 7)  /* P1_04 Y18: EN  - GPIO0_89 */
+			AM62X_IOPAD(0x019c, PIN_OUTPUT, 7)  /* P2_03 B18: DC  - GPIO1_9 */
+			AM62X_IOPAD(0x01a8, PIN_OUTPUT, 7)  /* P1_04 D20: RST - GPIO1_12 */
 		>;
 	};
 };
 
-/* 📟 OLED-C Click device node on SPI0 */
-&main_spi0 {
+&main_spi2 {
 	status = "okay";
 	pinctrl-names = "default";
-	pinctrl-0 = <&pb2_oledc_spi0_pins>;
+	pinctrl-0 = <&oledc_spi2_pins>;
 
 	#address-cells = <1>;
 	#size-cells = <0>;
 
-	oledc: oledc@0 {
+	oledc@0 {
 		compatible = "solomon,ssd1351";
-		reg = <0x0>;
+		reg = <0>;
 		spi-max-frequency = <6000000>;
+		width = <128>;
+		height = <128>;
+		fps = <40>;
+		buswidth = <8>;
 
-		reset-gpios = <&main_gpio1 18 GPIO_ACTIVE_LOW>;   // RST
-		dc-gpios    = <&main_gpio1 28 GPIO_ACTIVE_HIGH>;  // DC
+		pinctrl-names = "default";
+		pinctrl-0 = <&oledc_gpio_pins>;
 
-		width       = <128>;
-		height      = <128>;
-		fps         = <40>;
-		regwidth    = <8>;
-		buswidth    = <8>;
-		debug       = <3>;
+		reset-gpios = <&main_gpio1 12 GPIO_ACTIVE_LOW>;
+		dc-gpios    = <&main_gpio1 9  GPIO_ACTIVE_HIGH>;
 	};
 };
 
-/* 🔋 GPIO-driven enable LED */
-&{/} {
-	oledc_en_led {
+&main_gpio0 {
+	oledc0-en-led {
 		compatible = "gpio-leds";
 		status = "okay";
 
-		oledc_en@0 {
-			label = "oledc::en";
-			gpios = <&main_gpio1 2 GPIO_ACTIVE_HIGH>;  // EN pin
+		oledc0-en@0 {
+			label = "oledc0::en";
+			gpios = <&main_gpio0 89 GPIO_ACTIVE_HIGH>;
 			default-state = "on";
 		};
 	};
