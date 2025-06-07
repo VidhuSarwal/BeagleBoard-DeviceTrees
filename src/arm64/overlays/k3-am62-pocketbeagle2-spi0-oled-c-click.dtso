@@ -66,14 +66,11 @@
 };
 
 &main_gpio0 {
-	oledc0-en-led {
-		compatible = "gpio-leds";
-		status = "okay";
-
-		oledc0-en@0 {
-			label = "oledc0::en";
-			gpios = <&main_gpio0 89 GPIO_ACTIVE_HIGH>;
-			default-state = "on";
-		};
+	oledc_en_pin: oledc-en-pin {
+		gpio-hog;
+		gpios = <89 GPIO_ACTIVE_HIGH>;
+		output-high;
+		line-name = "oledc_en";
 	};
 };
+
